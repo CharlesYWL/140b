@@ -1,10 +1,14 @@
 %HW1 for ECS140B, professor: Kurt
 %authr: Weili Yin,xlyin@ucdavis.edu,912603171
 %published on github
-%it varify if row/col/suqare have same number&indomain
-valid([]).
-valid([H|T]):-
-    indomain(H),diff(H),valid(T).
+%it fillin possibilities
+fillin([],_).
+fillin([H|T],Other):-
+    indomain(H),diff(H),diffall(Other),fillin(T,Other).
+
+diffall([]).
+diffall([H|T]):- diff(H),diffall(T).
+
 %check if Head is atom of the rest list
 diff([]).
 diff([H|T]):- not(member(H,T)),diff(T).
@@ -56,9 +60,15 @@ sudoku(Puzzle):-
     Square7 = [S71,S72,S73,S81,S82,S83,S91,S92,S93],
     Square8 = [S74,S75,S76,S84,S85,S86,S94,S95,S96],
     Square9 = [S77,S78,S79,S87,S88,S89,S97,S98,S99],
-    valid([Row1,Row2,Row3,Row4,Row5,Row6,Row7,Row8,Row9,
-         Col1,Col2,Col3,Col4,Col5,Col6,Col7,Col8,Col9,
-         Square1,Square2,Square3,Square4,Square5,Square6,Square7,Square8,Square9]).
+
+    Allotherlist = [Col1,Col2,Col3,Col4,Col5,Col6,Col7,Col8,Col9,
+         Square1,Square2,Square3,Square4,Square5,Square6,Square7,Square8,Square9],
+    diff(Row1).
+%    fillin([Row1,Row2,Row3,Row4,Row5,Row6,Row7,Row8,Row9],Allotherlist).
+%    diffall([Col1,Col2,Col3,Col4,Col5,Col6,Col7,Col8,Col9,
+%         Square1,Square2,Square3,Square4,Square5,Square6,Square7,Square8,Square9]).
+
+
 test :-test0, nl,test0a, nl,test0b, nl,test0c.
 test0 :-L = [[9,6,3,1,7,4,2,5,8],[1,7,8,3,2,5,6,4,9],[2,5,4,6,8,9,7,3,1],[8,2,1,4,3,7,5,9,6],[4,9,6,8,5,2,3,1,7],[7,3,5,9,6,1,8,2,4],[5,8,9,7,1,3,4,6,2],[3,1,7,2,4,6,9,8,5],[6,4,2,5,9,8,1,7,3]],
         sudoku(L),printsudoku(L).
