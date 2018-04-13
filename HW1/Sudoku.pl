@@ -1,6 +1,6 @@
 %HW1 for ECS140B, professor: Kurt
 %authr: Weili Yin,xlyin@ucdavis.edu,912603171
-%
+%published on github
 %it varify if row/col/suqare have same number&indomain
 valid([]).
 valid([H|T]):-
