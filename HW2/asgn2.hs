@@ -17,16 +17,15 @@ power b f
   |f==0 =1
   |b==0 =0
   |f==1 =b
-  |otherwise =b * power b (f-1)
+  |otherwise = multiply b  (power b (f-1))
 
 power_tr::Int->Int->Int
 power_tr b f =power_tr_h b f 1
 power_tr_h::Int->Int->Int->Int
 power_tr_h b f rs
-  |f==0 =1
+  |f==0 =rs
   |b==0 =0
-  |f==1 =b
-  |otherwise = power_tr_h b (f-1) rs*b
+  |otherwise = power_tr_h b (f-1) (multiply_tr rs b)
 
 harmonic::Int->Float
 harmonic n
