@@ -27,3 +27,15 @@ power_tr_h b f rs
   |b==0 =0
   |f==1 =b
   |otherwise = power_tr_h b (f-1) rs*b
+
+harmonic::Int->Float
+harmonic n
+  |n==1 =1
+  |otherwise =(fromIntegral 1)/(fromIntegral n) + harmonic (n-1)
+
+harmonic_tr::Int->Float
+harmonic_tr n = harmonic_tr_h n 1.0
+harmonic_tr_h::Int->Float->Float
+harmonic_tr_h n rs
+  |n==1 =rs
+  |otherwise = harmonic_tr_h (n-1) ((fromIntegral 1)/(fromIntegral n) + rs)
