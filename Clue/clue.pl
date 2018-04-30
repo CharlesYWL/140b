@@ -1,6 +1,12 @@
 %Clue for ECS140B, author:Weili Yin 912603171, Zheng Xu 912970419
-%publish on github
+%published on github
 %professor: Kurt
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Prograss: Finished Interface with user(Move,SUggest,Accusate    %
+%           with correct feedback)                                %
+%          but Robot's part haven't been down(means bots cannot   %
+%          suggest,accusate and move)                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %dynamic setting, list contiains all, nonlist only ture if it is not the answer
 :- dynamic player_num/1.
 :- dynamic user_name/1.
@@ -40,12 +46,11 @@ initial:- write("Welcome to Clue.\n Let's startgame\n How many players?(3-6) end
   makeAnswer(PLafterRandom,RL,WL),
   initialPos(PLafterRandom).
 
-dealing:- write("deal reaming cards\n"),
-  findall(X,(player_name(X);room(X);weapon(X)),L),
+dealing:- findall(X,(player_name(X);room(X);weapon(X)),L),
   random_permutation(L,LafterRandom),assert(card_list(LafterRandom)),
-  addCard(LafterRandom,0),write("dealing finished\n").
+  addCard(LafterRandom,0).
 
-interface:- write("The order is:\n"),player_num(PN),IndexMax is PN-1,
+interface:- write("The Player order is:\n"),player_num(PN),IndexMax is PN-1,
   numlist(0,IndexMax,L),printOrder(L),write("\n"),
   player_list(PL),printOrder(PL),write("\n"),
   printYourCard,
@@ -63,13 +68,13 @@ interface:- write("The order is:\n"),player_num(PN),IndexMax is PN-1,
       (yourturn(Num),playerTurn(NextNum)); %if Username=Nth palyername
       botturn(Num),playerTurn(NextNum)). %else
 
-  %to simplify, you can move one to another in one turn
+  %to simplify, you can move one to another in one turn, FINISHED
   yourturn(Num):- write("It's Your turn now,You can move from one room to antoher in one turn(or stay the same room)\n"),
-    showMap,write("Which room you want to move?\n(you can only suggest or accusate events happening in that room)\n"),makeSuggestion(Num).
+    printYourCard,showMap,write("Which room you want to move?\n(you can only suggest or accusate events happening in that room)\n"),makeSuggestion(Num).
 
+  %not yet finished,action for robots.
+  botturn(Num):- player_list(List),nth0(Num,List,NthPN),write("now it's "),write(NthPN),write(" turn.\n"),sleep(3).
 
-  %not yet finished
-  botturn(Num):- player_list(List),nth0(Num,List,NthPN),write("now it's "),write(NthPN),write(" turn.\n").
   %suggestion1: move to a new room
   makeSuggestion(Num):- player_list(List),nth0(Num, List, PN),read(Room_name),
     (checkroom(PN,Room_name) ->
@@ -84,8 +89,8 @@ interface:- write("The order is:\n"),player_num(PN),IndexMax is PN-1,
         makeAccusation(Room_name,Num);
         write("Invalid Input\n"),makeSuggestion2(Room_name,Num))).
   %suggestion3: suggest anyone and gather information.
-  makeSuggestion3(Room_name,Num):- write("Here is weapon list: "),weapon_list(WL),printOrder(WL),
-    player_list(PL),write("Here is the player list: "),printOrder(PL),
+  makeSuggestion3(Room_name,Num):- write("Here is weapon list: \n"),weapon_list(WL),printOrder(WL),
+    player_list(PL),write("Here is the player list: \n"),printOrder(PL),
     write("who and what weapon you want to suggest to next player?\nin [who,weapon]. format\n"),
     read(Suggestion),
     (checkSuggestion(Suggestion) ->
@@ -93,9 +98,9 @@ interface:- write("The order is:\n"),player_num(PN),IndexMax is PN-1,
     write("Invalid Input,try again.\n"),makeSuggestion3(Room_name,Num)).
 
   %make accusation, correct win,wrong->lose
-  makeAccusation(Room_name,Num):- write("Here is weapon list: "),weapon_list(WL),printOrder(WL),
-    player_list(PL),write("Here is the player list: "),printOrder(PL),
-    write("Here is room list: "),room_list(RL),printOrder(RL),
+  makeAccusation(Room_name,Num):- write("Here is weapon list: \n"),weapon_list(WL),printOrder(WL),
+    player_list(PL),write("Here is the player list: \n"),printOrder(PL),
+    write("Here is room list: \n"),room_list(RL),printOrder(RL),
     write("Enter [Who,Weapon,Where]\n"),
     read(Accusation),
     (checkAccusation(Accusation) ->
@@ -109,7 +114,7 @@ interface:- write("The order is:\n"),player_num(PN),IndexMax is PN-1,
 
   %1:stay in the same room;2:move to empty room
   checkroom(PN,Room_name):- room_list(RL),member(Room_name,RL),pos(PN,Room_name).
-  checkroom(PN,Room_name):- room_list(RL),member(Room_name,RL),not(pos(_,Room_name)).
+  checkroom(_,Room_name):- room_list(RL),member(Room_name,RL),not(pos(_,Room_name)).
   checkSuggestion([Who,Weapon]):- player_list(PL),weapon_list(WL),member(Who,PL),member(Weapon,WL).
   checkSugCorrect([Who,Weapon,Room_name],List,Num):- player_list(PL),nth0(Num, PL, PN),
     (member(Who,List) ->
@@ -124,7 +129,7 @@ interface:- write("The order is:\n"),player_num(PN),IndexMax is PN-1,
     (answer(Who,Where,Weapon) ->
       write("AWESOME! YOU FOUND THE SUSPECT: "),printOrder([Who,Weapon,Where]),write("tpye any+'.' to quit"),read(T),halt();
       write("SORRY, YOU LOSE THE CHANCE TO WIN\n"),write("tpye any+'.' to quit"),read(T),halt()).
-  showMap:- write("\nStudy\tHall\tLonguge\n\nLibrary\n\nBilliard\tBegin\tDining\n\nConservatory\tBall\tKitchen\n\n"),
+  showMap:- write("\tMAP:\n\nStudy\tHall\tLonguge\n\nLibrary\n\nBilliard\tBegin\tDining\n\nConservatory\tBall\tKitchen\n\n"),
     write("Suspects'position:\n"),player_list(PL),printOrder(PL),write("\n"),
     findPos(PL,Rs),printOrder(Rs),write("\n").
   findPos([],[]).
@@ -157,8 +162,8 @@ makeAnswer(PLafterRandom,RL,WL):-
   retract(player_name(A_Player)),
   retract(room(A_Room)),
   retract(weapon(A_Weapon)),
-  assert(answer(A_Player,A_Room,A_Weapon)),
-  write(A_Player),write(A_Room),write(A_Weapon).%for test use
+  assert(answer(A_Player,A_Room,A_Weapon)).
+%  write(A_Player),write(A_Room),write(A_Weapon).%for test use
 
 addPlayer([]).
 addPlayer([H|T]) :- assert(player_name(H)),addPlayer(T).
