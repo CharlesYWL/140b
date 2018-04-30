@@ -10,8 +10,9 @@
 :- dynamic weapon_list/1.
 :- dynamic room/1.
 :- dynamic room_list/1.
-:- dynamic answer/3.
-:- dynamic card/1. %represent cards player can have
+:- dynamic answer/3. %final answer
+:- dynamic card_list/1. %represent cards player can have,it's a list
+:- dynamic card/2. %single card and who hold it.
 %every preset here
 player_list([mustard,scarlet,plum,green,peacock]).
 room_list([study,hall,lounge,dining,kitchen,ball,conservatory,billiard,library]).
@@ -24,8 +25,8 @@ inrange(6).
 %type startgame. to startgame
 startgame:-
   initial,%initial everything
-  dealing.%give everyone what they have
-
+  dealing,%give everyone what they have
+  interface.
 %get everything initialed
 initial:- write("Welcome to Clue.\n Let's startgame\n How many players?(3-6) end with '.'\n"),
   getPlayer_Num(PN),assert(player_num(PN)),
@@ -38,7 +39,15 @@ initial:- write("Welcome to Clue.\n Let's startgame\n How many players?(3-6) end
   makeAnswer(PLafterRandom,RL,WL).
 
 dealing:- write("deal reaming cards\n"),
+  findall(X,(player_name(X);room(X);weapon(X)),L),
+  random_permutation(L,LafterRandom),assert(card_list(LafterRandom)),
+  addCard(LafterRandom,0),write("dealing finished\n").
 
+interface:- write("The order is:\t"),player_list(PL),printOrder(PL),write("\n"),
+  
+
+  printOrder([]).
+  printOrder([H|T]):- write(H),write("\t"),printOrder(T).
 
 %read player number from user and check it
 getPlayer_Num(Player_Num):-
@@ -78,6 +87,10 @@ addRoom([H|T]) :- assert(room(H)),addRoom(T).
 
 addWeapon([]).
 addWeapon([H|T]) :- assert(weapon(H)),addWeapon(T).
+
+addCard([],_).%no card to add
+addCard([H|T],MaxNum):- player_num(MaxNum),addCard([H|T],0).%reach Max, return to 0th
+addCard([H|T],Num):- assert(card(H,Num)),NextNum is Num+1,addCard(T,NextNum).
 
 %randomly choose
 choose([], []).
