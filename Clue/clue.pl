@@ -12,6 +12,7 @@
 :- dynamic room_list/1.
 %every preset here
 player_list([mustard,scarlet,plum,green,peacock]).
+user_name(weili).%for test
 inrange(3).
 inrange(4).
 inrange(5).
@@ -40,11 +41,17 @@ getPlayer_Name(PNa):-
   read(PNa).
 
 %all player from a list of player
-makePlayerList(0,[]).
-makePlayerList(1,[UN|PL]):- user_name(UN),makePlayerList(0,PL).
-makePlayerList(Num,[H|T]):- retractall(player_list([H|TailofPL])),
-  assert(player_list(TailofPL)),makePlayerList(Num-1,T).
+%makePlayerList(0,[]).
+%makePlayerList(1,[UN|PL]):- user_name(UN),makePlayerList(0,PL),!.
+makePlayerList(Num,[UN|Rs]):-
+  NextNum is Num-1,takefirst(NextNum,PrePL,Rs),
+  player_list(PrePL),user_name(UN).
 
+
+%take first n ele in list.
+takefirst(N, _, Xs) :- N =< 0, !, N =:= 0, Xs = [].
+takefirst(_, [], []).
+takefirst(N, [X|Xs], [X|Ys]) :- M is N-1, takefirst(M, Xs, Ys).
 %randomly choose
 choose([], []).
 choose(List, Ele) :-
