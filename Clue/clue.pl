@@ -1,7 +1,7 @@
 %Clue for ECS140B, author:Weili Yin 912603171, Zheng Xu 912970419
 %publish on github
 %professor: Kurt
-%dynamic setting
+%dynamic setting, list contiains all, nonlist only ture if it is not the answer
 :- dynamic player_num/1.
 :- dynamic user_name/1.
 :- dynamic player_name/1.
@@ -10,22 +10,35 @@
 :- dynamic weapon_list/1.
 :- dynamic room/1.
 :- dynamic room_list/1.
+:- dynamic answer/3.
+:- dynamic card/1. %represent cards player can have
 %every preset here
 player_list([mustard,scarlet,plum,green,peacock]).
-user_name(weili).%for test
+room_list([study,hall,lounge,dining,kitchen,ball,conservatory,billiard,library]).
+weapon_list([rope,lead_pipe,knife,wrench,candlestick,pistol]).
 inrange(3).
 inrange(4).
 inrange(5).
 inrange(6).
 
 %type startgame. to startgame
-startgame:- initial.
+startgame:-
+  initial,%initial everything
+  dealing.%give everyone what they have
 
 %get everything initialed
 initial:- write("Welcome to Clue.\n Let's startgame\n How many players?(3-6) end with '.'\n"),
   getPlayer_Num(PN),assert(player_num(PN)),
   getPlayer_Name(PNa),assert(user_name(PNa)),
-  makePlayerList(PN,PL),retract(player_list(_)),assert(player_list(PL)).
+  makePlayerList(PN,PL),retract(player_list(_)),
+  random_permutation(PL,PLafterRandom),assert(player_list(PLafterRandom)),
+  addPlayer(PLafterRandom),
+  room_list(RL),addRoom(RL),
+  weapon_list(WL),addWeapon(WL),
+  makeAnswer(PLafterRandom,RL,WL).
+
+dealing:- write("deal reaming cards\n"),
+
 
 %read player number from user and check it
 getPlayer_Num(Player_Num):-
@@ -41,17 +54,31 @@ getPlayer_Name(PNa):-
   read(PNa).
 
 %all player from a list of player
-%makePlayerList(0,[]).
-%makePlayerList(1,[UN|PL]):- user_name(UN),makePlayerList(0,PL),!.
 makePlayerList(Num,[UN|Rs]):-
   NextNum is Num-1,takefirst(NextNum,PrePL,Rs),
   player_list(PrePL),user_name(UN).
 
+  %take first n ele in list.
+  takefirst(N, _, Xs) :- N =< 0, !, N =:= 0, Xs = [].
+  takefirst(_, [], []).
+  takefirst(N, [X|Xs], [X|Ys]) :- M is N-1, takefirst(M, Xs, Ys).
+%make answer and remove facts for answer parts.
+makeAnswer(PLafterRandom,RL,WL):-
+  choose(PLafterRandom,A_Player),choose(RL,A_Room),choose(WL,A_Weapon),
+  retract(player_name(A_Player)),
+  retract(room(A_Room)),
+  retract(weapon(A_Weapon)),
+  assert(answer(A_Player,A_Room,A_Weapon)).
 
-%take first n ele in list.
-takefirst(N, _, Xs) :- N =< 0, !, N =:= 0, Xs = [].
-takefirst(_, [], []).
-takefirst(N, [X|Xs], [X|Ys]) :- M is N-1, takefirst(M, Xs, Ys).
+addPlayer([]).
+addPlayer([H|T]) :- assert(player_name(H)),addPlayer(T).
+
+addRoom([]).
+addRoom([H|T]) :- assert(room(H)),addRoom(T).
+
+addWeapon([]).
+addWeapon([H|T]) :- assert(weapon(H)),addWeapon(T).
+
 %randomly choose
 choose([], []).
 choose(List, Ele) :-
