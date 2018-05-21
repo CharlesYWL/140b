@@ -4,7 +4,7 @@ import Data.Char
 import Data.Ix
 
 type Board = String
-type Eboard = (Int,Board)
+type Eboard = (Int,[Board])
 type Eboards = [Eboard]
 data Node = Node{history::[Board],value::Eboard,children::[Node]} deriving (Eq,Show,Read)
 
@@ -96,7 +96,7 @@ getPPos_h board row pos side
              ] [pos-row-row,pos-2,pos+2,pos+row+row]
 
 capture::[Board]->Char->Int->Board
-capture history side steps = (getBoard (value (miniMax3 history side steps)))
+capture history side steps = (getBoard (value (miniMax3 history side steps))) !! (steps-1)
 
 deleteOne::[[Board]]->[[Board]]
 deleteOne [] = []
@@ -119,6 +119,7 @@ miniMax3 history side steps = makeNode history (findMax(miniMax3_h history side 
 miniMax3_h::[Board]->Char->Char->Int->[Node]
 miniMax3_h history side whoaction steps
   |steps==0   = []
+  |null (generateNext history side) =[]
   |otherwise  = makeNodes history side whoaction steps (generateNext history side)
 
 
@@ -126,12 +127,13 @@ miniMax3_h history side whoaction steps
 --Node{history::[Board],value::Eboard,children::[Node]} deriving (Eq,Show,Read)
 makeNode::[Board]->Eboard->Char->[Node]->Node
 makeNode his val side nodes
-  |null nodes  =Node{history=his,value=((evalueBoard (head his) side),(head his)),children=[]}
+  |null nodes  =Node{history=his,value=((evalueBoard (head his) side), his),children=[]}
   |otherwise        =Node{history=his,value=val,children=nodes}
 makeNodes::[Board]->Char->Char->Int->[Board]->[Node]
 makeNodes history side whoaction steps generatedboards
   |null generatedboards = []
   |(evalueBoard (head history) side)==1000 = [] --stop further searching while it can win
+  |(evalueBoard (head history) side)==(-1000) = []
   |side==whoaction       =(makeNode (add2head history (head generatedboards))
                                     (findMax(miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1)) side)
                                     side
@@ -145,11 +147,11 @@ makeNodes history side whoaction steps generatedboards
 
 findMax::[Node]->Char->Eboard--among nodes find max value
 findMax nodes side
-  |null (value (head nodes)) = (-1,"")
+  |null (value (head nodes)) = (-1,[])
   |otherwise                 = maximum (map value nodes)
 findMin::[Node]->Char->Eboard
 findMin nodes side
-  |null (value (head nodes)) = (-1,"")
+  |null (value (head nodes)) = (-1,[])
   |otherwise                 = minimum (map value nodes)
 
 
@@ -161,14 +163,10 @@ expendRs side iniRs
   |null iniRs =[]
   |otherwise  = (map (add2head (head iniRs))  (generateNext (head iniRs) side)) ++ (expendRs (opp side) (tail iniRs))
 
-pair::[Int]->[Board]->[Eboard]
-pair value list
-  |null value =[]
-  |otherwise = (head value,head list): pair (tail value) (tail list)
 
 getVal::Eboard->Int
 getVal (a,_) = a
-getBoard::Eboard->Board
+getBoard::Eboard->[Board]
 getBoard(_,a)=a
 add2head::[String]->String->[String]
 add2head history board = [board]++history
