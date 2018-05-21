@@ -94,17 +94,24 @@ getPPos_h board row pos side
 --capture::[Board]->Char->Int->Board
 --capture history side steps
 
---generateNext::[Board]->Char->[Board]
+--generateNext::[Board]->Char->EBoards --generate all possible movements, and reduce history part
 --generateNext history side =
 
 makeMove::Board->Char->Int->[Board] --it make single move and have some results
 makeMove board side pos
-  |(board !! pos)==side         =map (moveTo board pos) (filter (isfree board) (getPPos board (findRow board) pos side))
-  |(board !! pos)==toUpper side =map (moveTo board pos) (filter (isfree board) (getFPos (findRow board) pos))
+  |(board !! pos)==side         =map (moveTo_cap board pos) (filter (isfree board) (getPPos board (findRow board) pos side)) --capture more proiority than move
+  |(board !! pos)==toUpper side =map (moveTo board pos) (filter (isfree board) (getFPos (findRow board) pos)) --flag can only move
   |otherwise = []
 
 --Folowing movement NOT make any judgement
 moveTo::Board->Int->Int->Board
 moveTo board inipos finpos = take finpos (take inipos board ++ ['-'] ++ drop (inipos + 1) board) ++ [(board !! inipos)] ++ drop (finpos+1) (take inipos board ++ ['-'] ++ drop (inipos + 1) board)
-eat::Board->Int->Board
-eat board pos = take pos board ++ ['-'] ++ drop (pos + 1) board
+eat::Int->Board->Board
+eat pos board= take pos board ++ ['-'] ++ drop (pos + 1) board
+moveTo_cap::Board->Int->Int->Board
+moveTo_cap board inipos finpos --special for dealing with capture 1st:move condition  2nd:jump condition
+  |or[abs((getPosCol (findRow board) inipos)-(getPosCol (findRow board) finpos))==1,
+      abs((getPosRow (findRow board) inipos)-(getPosRow (findRow board) finpos))==1]  =take finpos (take inipos board ++ ['-'] ++ drop (inipos + 1) board) ++ [(board !! inipos)] ++ drop (finpos+1) (take inipos board ++ ['-'] ++ drop (inipos + 1) board)
+  |or[abs((getPosCol (findRow board) inipos)-(getPosCol (findRow board) finpos))==2,
+      abs((getPosRow (findRow board) inipos)-(getPosRow (findRow board) finpos))==2]  =eat ((inipos+finpos) `div`  2) (take finpos (take inipos board ++ ['-'] ++ drop (inipos + 1) board) ++ [(board !! inipos)] ++ drop (finpos+1) (take inipos board ++ ['-'] ++ drop (inipos + 1) board))
+  |otherwise =[]
