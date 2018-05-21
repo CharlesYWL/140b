@@ -6,7 +6,7 @@ import Data.Ix
 type Board = String
 type Eboard = (Int,Board)
 type Eboards = [Eboard]
-data Node = Node{history::[Board],value::Int,children::[Node]} deriving (Eq,Show,Read)
+data Node = Node{history::[Board],value::Eboard,children::[Node]} deriving (Eq,Show,Read)
 
 
 --basic helpful function
@@ -113,21 +113,36 @@ miniMax2::Char->Char->Int->[[Board]]->[[Board]]
 miniMax2 side whoaction steps result
   |steps== 0  =result
   |otherwise  =miniMax2 side (opp whoaction) (steps-1) (expendRs whoaction result)
+
 --try of data minimax
-  miniMax3::[Board]->Char->Int->Node --root node
-  miniMax3 history side steps = (makeNode history, findMax(miniMax3_h history side side steps),(miniMax3_h history side side steps))
-  miniMax3_h::[Board]->Char->Char->Int->[Node]
-  miniMax3_h history side whoaction steps
-    |steps==0 = makeNode [],(-1),[]
+miniMax3::[Board]->Char->Int->Node -- root node
+miniMax3 history side steps = makeNode history (findMax(miniMax3_h history side side steps)) (miniMax3_h history side side steps)
+miniMax3_h::[Board]->Char->Char->Int->[Node]
+miniMax3_h history side whoaction steps
+  |steps==0   = []
+  |otherwise  = makeNodes history side (opp whoaction) steps (generateNext history side)
 
 
 
-
-
---Node{history::[Board],value::Int,children::[Node]} deriving (Eq,Show,Read)
-makeNode::[Board]->Int->[Node]->Node
+--Node{history::[Board],value::Eboard,children::[Node]} deriving (Eq,Show,Read)
+makeNode::[Board]->Eboard->[Node]->Node
 makeNode his val nodes= Node{history=his,value=val,children=nodes}
+makeNodes::[Board]->Char->Char->Int->[Board]->[Node]
+makeNodes  history side whoaction steps generatedboards
+  |null generatedboards = []
+  |side==whoaction       =(makeNode (add2head history (head generatedboards))
+                                    (findMax(miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1)))
+                                    (miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1))
+                          ):(makeNodes history side whoaction steps (tail generatedboards))
+  |otherwise             =(makeNode (add2head history (head generatedboards))
+                                    (findMin(miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1)))
+                                    (miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1))
+                          ):(makeNodes history side whoaction steps (tail generatedboards))
 
+findMax::[Node]->Eboard--among nodes find max value
+findMax nodes = (0,"")
+findMin::[Node]->Eboard
+findMin nodes = (0,"")
 
 
 
