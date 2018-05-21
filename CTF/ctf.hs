@@ -97,9 +97,18 @@ getPPos_h board row pos side
 
 --capture::[Board]->Char->Int->Board
 
-miniMax::[Board]->Char->Int->String->Eboard
+miniMax::[Board]->Char->Int->String->[Eboard]
 miniMax history side steps tp
-  |  = generateNext history side
+  |steps==0   =
+  |tp=="max"  =  
+  |tp=="mini" =
+
+--(map (add2head history)  (generateNext history side)),
+
+
+getEboards_min::[Eboard]->Int
+getEboards_min eboards = getVal (findMin eboards)
+
 
 pair::[Int]->[Board]->[Eboard]
 pair value list
@@ -109,6 +118,10 @@ findMax::Eboards->Eboard
 findMax list = maximum list
 findMin::Eboards->Eboard
 findMin list = minimum list
+getVal::Eboard->Int
+getVal (a,_) = a
+add2head::[String]->String->[String]
+add2head history board = [board]++history
 
 
 generateNext::[Board]->Char->[Board] --generate all possible movements, and reduce history part
