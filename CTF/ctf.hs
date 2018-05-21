@@ -1,10 +1,16 @@
+--auther: Weili Yin,912603171. Zheng Xu
+--ECS140b, professor: Kurt
 import Data.Char
 import Data.Ix
---capture::[String]->Char->Int->String
---capture l c n
+
+type Board = String
+type Eboard = (String,Int) -- evluaed board
+type Eboards = [Eboard]
+type Node = (Eboard,Char,Int,Eboards) --this int indicate how many minimax steps it goes
+
 
 --basic helpful function
-findRow::String->Int
+findRow::Board->Int
 findRow l = toInt (sqrt (fromIntegral  (length l)))
 getPosCol::Int->Int->Int
 getPosCol row pos = mod pos row
@@ -24,17 +30,18 @@ one2one bl list
   |head bl = head list:(one2one (tail bl) (tail list))
   |otherwise = one2one (tail bl) (tail list)
 
+
 --this function will return the evaluation
---evalueBoard::String->Char->Int
---evalueBoard board side
---  |side=='w' =evBw board
---  |otherwise =evBb board
-evBw::String->Int
+evalueBoard::Board->Char->Int
+evalueBoard board side
+  |side=='w' =evBw board
+  |otherwise =evBb board
+evBw::Board->Int
 evBw board
   |or[not (elem 'B' board), (countNum 'b' board) ==0,not (canImove board 'b')] = 1000 --means white wins!
   |or[not (elem 'W' board), (countNum 'w' board) ==0,not (canImove board 'w')] = -1000 --means white loses.
   |otherwise = (countNum 'w' board) - (countNum 'b' board)
-evBb::String->Int
+evBb::Board->Int
 evBb board
   |or[not (elem 'W' board), (countNum 'w' board) ==0,not (canImove board 'w')] = 1000 --means white wins!
   |or[not (elem 'B' board), (countNum 'b' board) ==0,not (canImove board 'b')] = -1000 --means white loses.
@@ -46,9 +53,9 @@ countNum _ [] = 0
 countNum c l
   |c== head l = 1 + countNum c (tail l)
   |otherwise = countNum c (tail l)
-canImove::String->Char->Bool
+canImove::Board->Char->Bool
 canImove board s = canImove_h board s 0
-canImove_h::String->Char->Int->Bool
+canImove_h::Board->Char->Int->Bool
 canImove_h board s pos
   |pos >= length board = False--test till last pos, means all fail
   |and[(board !! pos)==s,or (map (isfree board) (getPPos board (findRow board) pos s))] = True--test pawn, inside or[],freespace aviliable
@@ -56,30 +63,48 @@ canImove_h board s pos
   |otherwise = canImove_h board s (pos+1) --this cannot move/or not yours, next
 
 --free func test if a space is empty
-isfree::String->Int->Bool
+isfree::Board->Int->Bool
 isfree board pos = (board !! pos)=='-'
 
-getFPos::Int->Int->[Int] --get aviliable slots for Flag
+getFPos::Int->Int->[Int] --get all aviliable slots for Flag
 getFPos row pos = one2one [and[isSameCol row pos (pos-row), inRange (0,row^2-1) (pos-row)],
                            and[isSameRow row pos (pos-1),inRange (0,row^2-1) (pos-1)],
                            and[isSameRow row pos (pos+1),inRange (0,row^2-1) (pos+1)],
                            and[isSameCol row pos (pos+row),inRange (0,row^2-1) (pos+row)]] [pos-row,pos-1,pos+1,pos+row]
 
 
-getPPos::String->Int->Int->Char->[Int]--get aviliable slots for pawns
+getPPos::Board->Int->Int->Char->[Int]--get all aviliable slots for pawns
 getPPos board row pos side = one2one [and[isSameCol row pos (pos-row), inRange (0,row^2-1) (pos-row), side=='b'], --white cannot move up
                                       and[isSameRow row pos (pos-1),inRange (0,row^2-1) (pos-1)],
                                       and[isSameRow row pos (pos+1),inRange (0,row^2-1) (pos+1)],
                                       and[isSameCol row pos (pos+row),inRange (0,row^2-1) (pos+row),side=='w']] [pos-row,pos-1,pos+1,pos+row] --black cannot move down
                                        ++ (getPPos_h board row pos side)
-getPPos_h::String->Int->Int->Char->[Int] -- pawns can jump over oppenents
+getPPos_h::Board->Int->Int->Char->[Int] -- pawns can jump over oppenents
 getPPos_h board row pos side
-  =  one2one [and[isSameCol row pos (pos-row), inRange (0,row^2-1) (pos-row),side=='b',(board !! (pos-row))==(opp side),
+  =  one2one [and[isSameCol row pos (pos-row), inRange (0,row^2-1) (pos-row),side=='b',or[(board !! (pos-row))==(opp side),(board !! (pos-row))==(toUpper (opp side))],
                   isSameCol row pos (pos-row-row), inRange (0,row^2-1) (pos-row-row)],
-              and[isSameRow row pos (pos-1),inRange (0,row^2-1) (pos-1),(board !! (pos-1))==(opp side),
+              and[isSameRow row pos (pos-1),inRange (0,row^2-1) (pos-1),or[(board !! (pos-1))==(opp side),(board !! (pos-1))==(toUpper (opp side))],
                   isSameRow row pos (pos-2), inRange (0,row^2-1) (pos-2)],
-              and[isSameRow row pos (pos+1),inRange (0,row^2-1) (pos+1),(board !! (pos+1))==(opp side),
+              and[isSameRow row pos (pos+1),inRange (0,row^2-1) (pos+1),or[(board !! (pos+1))==(opp side),(board !! (pos+1))==(toUpper (opp side))],
                   isSameRow row pos (pos+2), inRange (0,row^2-1) (pos+2)],
-              and[isSameCol row pos (pos+row),inRange (0,row^2-1) (pos+row),side=='w',(board !! (pos+row))==(opp side),
+              and[isSameCol row pos (pos+row),inRange (0,row^2-1) (pos+row),side=='w',or[(board !! (pos+row))==(opp side),(board !! (pos+row))==(toUpper (opp side))],
                   isSameCol row pos (pos+row+row), inRange (0,row^2-1) (pos+row+row)]
              ] [pos-row-row,pos-2,pos+2,pos+row+row]
+
+--capture::[Board]->Char->Int->Board
+--capture history side steps
+
+--generateNext::[Board]->Char->[Board]
+--generateNext history side =
+
+makeMove::Board->Char->Int->[Board] --it make single move and have some results
+makeMove board side pos
+  |(board !! pos)==side         =map (moveTo board pos) (filter (isfree board) (getPPos board (findRow board) pos side))
+  |(board !! pos)==toUpper side =map (moveTo board pos) (filter (isfree board) (getFPos (findRow board) pos))
+  |otherwise = []
+
+--Folowing movement NOT make any judgement
+moveTo::Board->Int->Int->Board
+moveTo board inipos finpos = take finpos (take inipos board ++ ['-'] ++ drop (inipos + 1) board) ++ [(board !! inipos)] ++ drop (finpos+1) (take inipos board ++ ['-'] ++ drop (inipos + 1) board)
+eat::Board->Int->Board
+eat board pos = take pos board ++ ['-'] ++ drop (pos + 1) board
