@@ -4,7 +4,7 @@ import Data.Char
 import Data.Ix
 
 type Board = String
-type Eboard = (String,Int) -- evluaed board
+type Eboard = (Int,Board)
 type Eboards = [Eboard]
 type Node = (Eboard,Char,Int,Eboards) --this int indicate how many minimax steps it goes
 
@@ -29,6 +29,10 @@ one2one bl list
   |null bl = []
   |head bl = head list:(one2one (tail bl) (tail list))
   |otherwise = one2one (tail bl) (tail list)
+notelem list target
+  |null list =True
+  |head list == target = False
+  |otherwise =notelem (tail list) target
 
 
 --this function will return the evaluation
@@ -92,10 +96,27 @@ getPPos_h board row pos side
              ] [pos-row-row,pos-2,pos+2,pos+row+row]
 
 --capture::[Board]->Char->Int->Board
---capture history side steps
 
---generateNext::[Board]->Char->EBoards --generate all possible movements, and reduce history part
---generateNext history side =
+miniMax::[Board]->Char->Int->String->Eboard
+miniMax history side steps tp
+  |  = generateNext history side
+
+pair::[Int]->[Board]->[Eboard]
+pair value list
+  |null value =[]
+  |otherwise = (head value,head list): pair (tail value) (tail list)
+findMax::Eboards->Eboard
+findMax list = maximum list
+findMin::Eboards->Eboard
+findMin list = minimum list
+
+
+generateNext::[Board]->Char->[Board] --generate all possible movements, and reduce history part
+generateNext history side = filter (notelem history) (generateNext_h (history !! 0) side 0)
+generateNext_h::Board->Char->Int->[Board]
+generateNext_h board side pos
+  |pos==((findRow board)^2) = []
+  |otherwise = (makeMove board side pos) ++ (generateNext_h board side (pos+1))
 
 makeMove::Board->Char->Int->[Board] --it make single move and have some results
 makeMove board side pos
