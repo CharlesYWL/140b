@@ -95,9 +95,8 @@ getPPos_h board row pos side
                   isSameCol row pos (pos+row+row), inRange (0,row^2-1) (pos+row+row)]
              ] [pos-row-row,pos-2,pos+2,pos+row+row]
 
---capture::[Board]->Char->Int->Board
---capture history side steps =
---  miniMax side steps history
+capture::[Board]->Char->Int->Board
+capture history side steps = (getBoard (value (miniMax3 history side steps)))
 
 deleteOne::[[Board]]->[[Board]]
 deleteOne [] = []
@@ -106,7 +105,7 @@ evaluall::[[Board]]->Char->[Int]
 evaluall histories side
   |null histories = []
   |otherwise      =(evalueBoard  (head (head histories)) side):evaluall (tail histories) side
-
+--wrong try first time
 miniMax::Char->Int->[Board]->[[Board]]
 miniMax side steps history = miniMax2 side side steps [history] --now it has all posibilities
 miniMax2::Char->Char->Int->[[Board]]->[[Board]]
@@ -116,33 +115,42 @@ miniMax2 side whoaction steps result
 
 --try of data minimax
 miniMax3::[Board]->Char->Int->Node -- root node
-miniMax3 history side steps = makeNode history (findMax(miniMax3_h history side side steps)) (miniMax3_h history side side steps)
+miniMax3 history side steps = makeNode history (findMax(miniMax3_h history side side steps) side) side (miniMax3_h history side side steps)
 miniMax3_h::[Board]->Char->Char->Int->[Node]
 miniMax3_h history side whoaction steps
   |steps==0   = []
-  |otherwise  = makeNodes history side (opp whoaction) steps (generateNext history side)
+  |otherwise  = makeNodes history side whoaction steps (generateNext history side)
 
 
 
 --Node{history::[Board],value::Eboard,children::[Node]} deriving (Eq,Show,Read)
-makeNode::[Board]->Eboard->[Node]->Node
-makeNode his val nodes= Node{history=his,value=val,children=nodes}
+makeNode::[Board]->Eboard->Char->[Node]->Node
+makeNode his val side nodes
+  |null nodes  =Node{history=his,value=((evalueBoard (head his) side),(head his)),children=[]}
+  |otherwise        =Node{history=his,value=val,children=nodes}
 makeNodes::[Board]->Char->Char->Int->[Board]->[Node]
-makeNodes  history side whoaction steps generatedboards
+makeNodes history side whoaction steps generatedboards
   |null generatedboards = []
+  |(evalueBoard (head history) side)==1000 = [] --stop further searching while it can win
   |side==whoaction       =(makeNode (add2head history (head generatedboards))
-                                    (findMax(miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1)))
+                                    (findMax(miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1)) side)
+                                    side
                                     (miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1))
                           ):(makeNodes history side whoaction steps (tail generatedboards))
   |otherwise             =(makeNode (add2head history (head generatedboards))
-                                    (findMin(miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1)))
+                                    (findMin(miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1)) side)
+                                    side
                                     (miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1))
                           ):(makeNodes history side whoaction steps (tail generatedboards))
 
-findMax::[Node]->Eboard--among nodes find max value
-findMax nodes = (0,"")
-findMin::[Node]->Eboard
-findMin nodes = (0,"")
+findMax::[Node]->Char->Eboard--among nodes find max value
+findMax nodes side
+  |null (value (head nodes)) = (-1,"")
+  |otherwise                 = maximum (map value nodes)
+findMin::[Node]->Char->Eboard
+findMin nodes side
+  |null (value (head nodes)) = (-1,"")
+  |otherwise                 = minimum (map value nodes)
 
 
 
