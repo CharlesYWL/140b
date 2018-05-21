@@ -6,7 +6,7 @@ import Data.Ix
 type Board = String
 type Eboard = (Int,Board)
 type Eboards = [Eboard]
-type Node = (Eboard,Char,Int,Eboards) --this int indicate how many minimax steps it goes
+data Node = Node{history::[Board],value::Int,children::[Node]} deriving (Eq,Show,Read)
 
 
 --basic helpful function
@@ -95,20 +95,17 @@ getPPos_h board row pos side
                   isSameCol row pos (pos+row+row), inRange (0,row^2-1) (pos+row+row)]
              ] [pos-row-row,pos-2,pos+2,pos+row+row]
 
-capture::[Board]->Char->Int->Board
-capture history side steps
-  |
-
-
-
-reduceFindMin::[[Board]]->Int->[([Board])]
-reduceFindMin histories minIndex
-  |his
+--capture::[Board]->Char->Int->Board
+--capture history side steps =
+--  miniMax side steps history
 
 deleteOne::[[Board]]->[[Board]]
 deleteOne [] = []
 deleteOne list = (drop 1 (head list)):deleteOne (tail list)
-
+evaluall::[[Board]]->Char->[Int]
+evaluall histories side
+  |null histories = []
+  |otherwise      =(evalueBoard  (head (head histories)) side):evaluall (tail histories) side
 
 miniMax::Char->Int->[Board]->[[Board]]
 miniMax side steps history = miniMax2 side side steps [history] --now it has all posibilities
@@ -116,6 +113,24 @@ miniMax2::Char->Char->Int->[[Board]]->[[Board]]
 miniMax2 side whoaction steps result
   |steps== 0  =result
   |otherwise  =miniMax2 side (opp whoaction) (steps-1) (expendRs whoaction result)
+--try of data minimax
+  miniMax3::[Board]->Char->Int->Node --root node
+  miniMax3 history side steps = (makeNode history, findMax(miniMax3_h history side side steps),(miniMax3_h history side side steps))
+  miniMax3_h::[Board]->Char->Char->Int->[Node]
+  miniMax3_h history side whoaction steps
+    |steps==0 = makeNode [],(-1),[]
+
+
+
+
+
+--Node{history::[Board],value::Int,children::[Node]} deriving (Eq,Show,Read)
+makeNode::[Board]->Int->[Node]->Node
+makeNode his val nodes= Node{history=his,value=val,children=nodes}
+
+
+
+
 
 --explore paths
 expendRs::Char->[[Board]]->[[Board]]
@@ -127,10 +142,7 @@ pair::[Int]->[Board]->[Eboard]
 pair value list
   |null value =[]
   |otherwise = (head value,head list): pair (tail value) (tail list)
-findMax::Eboards->Eboard
-findMax list = maximum list
-findMin::Eboards->Eboard
-findMin list = minimum list
+
 getVal::Eboard->Int
 getVal (a,_) = a
 getBoard::Eboard->Board
