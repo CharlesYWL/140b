@@ -95,20 +95,33 @@ getPPos_h board row pos side
                   isSameCol row pos (pos+row+row), inRange (0,row^2-1) (pos+row+row)]
              ] [pos-row-row,pos-2,pos+2,pos+row+row]
 
---capture::[Board]->Char->Int->Board
-
-miniMax::[Board]->Char->Int->String->[Eboard]
-miniMax history side steps tp
-  |steps==0   =
-  |tp=="max"  =  
-  |tp=="mini" =
-
---(map (add2head history)  (generateNext history side)),
+capture::[Board]->Char->Int->Board
+capture history side steps
+  |
 
 
-getEboards_min::[Eboard]->Int
-getEboards_min eboards = getVal (findMin eboards)
 
+reduceFindMin::[[Board]]->Int->[([Board])]
+reduceFindMin histories minIndex
+  |his
+
+deleteOne::[[Board]]->[[Board]]
+deleteOne [] = []
+deleteOne list = (drop 1 (head list)):deleteOne (tail list)
+
+
+miniMax::Char->Int->[Board]->[[Board]]
+miniMax side steps history = miniMax2 side side steps [history] --now it has all posibilities
+miniMax2::Char->Char->Int->[[Board]]->[[Board]]
+miniMax2 side whoaction steps result
+  |steps== 0  =result
+  |otherwise  =miniMax2 side (opp whoaction) (steps-1) (expendRs whoaction result)
+
+--explore paths
+expendRs::Char->[[Board]]->[[Board]]
+expendRs side iniRs
+  |null iniRs =[]
+  |otherwise  = (map (add2head (head iniRs))  (generateNext (head iniRs) side)) ++ (expendRs (opp side) (tail iniRs))
 
 pair::[Int]->[Board]->[Eboard]
 pair value list
@@ -120,6 +133,8 @@ findMin::Eboards->Eboard
 findMin list = minimum list
 getVal::Eboard->Int
 getVal (a,_) = a
+getBoard::Eboard->Board
+getBoard(_,a)=a
 add2head::[String]->String->[String]
 add2head history board = [board]++history
 
