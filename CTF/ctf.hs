@@ -1,4 +1,4 @@
---auther: Weili Yin,912603171. Zheng Xu
+--auther: Weili Yin,912603171. Zheng Xu,912970419
 --ECS140b, professor: Kurt
 import Data.Char
 import Data.Ix
@@ -36,6 +36,8 @@ notelem list target
 
 
 --this function will return the evaluation
+--really simple evalutation, only considering the number of pawns and avoid lose. It could be better
+--if it has some aspects about free step for each pawns/flags, but no time
 evalueBoard::Board->Char->Int
 evalueBoard board side
   |side=='w' =evBw board
@@ -98,14 +100,8 @@ getPPos_h board row pos side
 capture::[Board]->Char->Int->Board --make sure I will get the right next steps for good steps
 capture history side steps = (getBoard (value (miniMax3 history side steps))) !! (length(getBoard (value (miniMax3 history side steps))) - (length history) -1)
 
-deleteOne::[[Board]]->[[Board]]
-deleteOne [] = []
-deleteOne list = (drop 1 (head list)):deleteOne (tail list)
-evaluall::[[Board]]->Char->[Int]
-evaluall histories side
-  |null histories = []
-  |otherwise      =(evalueBoard  (head (head histories)) side):evaluall (tail histories) side
---wrong try first time
+
+--wrong try first two times
 miniMax::Char->Int->[Board]->[[Board]]
 miniMax side steps history = miniMax2 side side steps [history] --now it has all posibilities
 miniMax2::Char->Char->Int->[[Board]]->[[Board]]
@@ -122,8 +118,6 @@ miniMax3_h history side whoaction steps
   |null (generateNext history side) =[]
   |otherwise  = makeNodes history side whoaction steps (generateNext history side)
 
-
-
 --Node{history::[Board],value::Eboard,children::[Node]} deriving (Eq,Show,Read)
 makeNode::[Board]->Eboard->Char->[Node]->Node
 makeNode his val side nodes
@@ -134,7 +128,7 @@ makeNodes history side whoaction steps generatedboards
   |null generatedboards = []
   |(evalueBoard (head history) side)==1000 = [] --stop further searching while it can win
   |(evalueBoard (head history) side)==(-1000) = []
-  |side==whoaction       =(makeNode (add2head history (head generatedboards))
+  |side==whoaction       =(makeNode (add2head history (head generatedboards)) -- new a node which based further on next notes
                                     (findMax(miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1)) side)
                                     side
                                     (miniMax3_h (add2head history (head generatedboards)) side (opp whoaction) (steps-1))
@@ -148,7 +142,7 @@ makeNodes history side whoaction steps generatedboards
 findMax::[Node]->Char->Eboard--among nodes find max value
 findMax nodes side
   |null (value (head nodes)) = (-1,[])
-  |otherwise                 = maximum (map value nodes)
+  |otherwise                 = maximum (map value nodes) --it works becuase I put (Int,[String])
 findMin::[Node]->Char->Eboard
 findMin nodes side
   |null (value (head nodes)) = (-1,[])
@@ -157,7 +151,7 @@ findMin nodes side
 
 
 
---explore paths
+--explore paths, old function useless
 expendRs::Char->[[Board]]->[[Board]]
 expendRs side iniRs
   |null iniRs =[]
