@@ -95,8 +95,8 @@ getPPos_h board row pos side
                   isSameCol row pos (pos+row+row), inRange (0,row^2-1) (pos+row+row)]
              ] [pos-row-row,pos-2,pos+2,pos+row+row]
 
-capture::[Board]->Char->Int->Board
-capture history side steps = (getBoard (value (miniMax3 history side steps))) !! (steps-1)
+capture::[Board]->Char->Int->Board --make sure I will get the right next steps for good steps
+capture history side steps = (getBoard (value (miniMax3 history side steps))) !! (length(getBoard (value (miniMax3 history side steps))) - (length history) -1)
 
 deleteOne::[[Board]]->[[Board]]
 deleteOne [] = []
