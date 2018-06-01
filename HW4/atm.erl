@@ -1,2 +1,2 @@
--molude(bank).
+-module(atm).
 -export([loop/0]).
