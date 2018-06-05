@@ -32,10 +32,10 @@ loop() ->
           ets:insert(BankName,{Name,NewBalance}),
           io:format("~p dollars withdrawn\n",[Cash]),
           io:format("account ~p now has ~p dollars\n",[Name,NewBalance]),
-          true;
+          loop();
         false ->
           io:format("sorry, account ~p has only ~p dollars\n",[Name,OldBalance]),
-          false;
+          erlang:throw({error,not_sufficient})
 end.
 
 createTable(List,TableName) ->

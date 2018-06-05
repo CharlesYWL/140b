@@ -19,7 +19,7 @@ loop()->
       [{bankname,BankName}]= ets:lookup(AtmName,bankname),
       Pid ! {deposit,Name,Cash,BankName},
       loop();
-%    {withdraw,Name,Cash,AtmName}->
+
     {balance,Name,AtmName} ->
       [{pid,Pid}] = ets:lookup(AtmName,pid),
       [{bankname,BankName}]= ets:lookup(AtmName,bankname),
@@ -31,10 +31,10 @@ loop()->
       [{cash,NowCash}]= ets:lookup(AtmName,cash),
       case (NowCash>=Cash) of
         true ->
-          case (Pid ! {withdraw,Name,Cash,BankName}) of
+          try (Pid ! {withdraw,Name,Cash,BankName}) of
             true ->
             false ->
         false ->
           io:format("sorry, insufficient cash in this atm",[]),
-          loop()      
+          loop()
 end.
