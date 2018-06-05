@@ -2,6 +2,7 @@
 -export([loop/0,createTable/2,insertTable/3]).
 
 loop() ->
+  process_flag(trap_exit, true),
   receive
     {create,List,TableName} ->
       createTable(List,TableName),
@@ -17,7 +18,6 @@ loop() ->
       loop();
     {deposit,Name,Cash,BankName} ->
       [{Name,OldBalance}]=ets:lookup(BankName,Name),
-%      io:format("~p had OldBalance: ~p\n",[Name,OldBalance]),
       NewBalance=(OldBalance+Cash),
       ets:delete(BankName,Name),
       ets:insert(BankName,{Name,NewBalance}),
@@ -26,16 +26,19 @@ loop() ->
     {withdraw,Name,Cash,BankName} ->
       [{Name,OldBalance}]=ets:lookup(BankName,Name),
       NewBalance=(OldBalance-Cash),
-      case(NewBalance >= 0) of
+      case NewBalance >= 0 of
         true ->
-          ets:delete(BankName,Name),
+          {ets:delete(BankName,Name),
           ets:insert(BankName,{Name,NewBalance}),
           io:format("~p dollars withdrawn\n",[Cash]),
           io:format("account ~p now has ~p dollars\n",[Name,NewBalance]),
-          loop();
+          loop()};
         false ->
           io:format("sorry, account ~p has only ~p dollars\n",[Name,OldBalance]),
-          erlang:throw({error,not_sufficient})
+%          exit(insufficient_balance),
+%          io:format("still work after throw",[]),
+          loop()
+      end
 end.
 
 createTable(List,TableName) ->

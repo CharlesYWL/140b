@@ -1,5 +1,5 @@
 -module(atm).
--export([loop/0]).
+-export([loop/0,getBalance/2]).
 
 loop()->
   receive
@@ -31,10 +31,16 @@ loop()->
       [{cash,NowCash}]= ets:lookup(AtmName,cash),
       case (NowCash>=Cash) of
         true ->
-          try (Pid ! {withdraw,Name,Cash,BankName}) of
-            true ->
-            false ->
+          {Pid ! {withdraw,Name,Cash,BankName},
+                io:format("success enter D&I",[]),
+                ets:delete(AtmName,cash),
+                ets:insert(AtmName,{cash,NowCash}};
         false ->
-          io:format("sorry, insufficient cash in this atm",[]),
+          io:format("sorry, insufficient cash in this atm\n",[]),
           loop()
+      end
 end.
+
+getBalance(BankName,Name) ->
+    [{Name,Balance}]=ets:lookup(BankName,Name),
+    Balance.
