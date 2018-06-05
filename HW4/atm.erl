@@ -29,12 +29,17 @@ loop()->
       [{pid,Pid}] = ets:lookup(AtmName,pid),
       [{bankname,BankName}]= ets:lookup(AtmName,bankname),
       [{cash,NowCash}]= ets:lookup(AtmName,cash),
-      case (NowCash>=Cash) of
+      OldBalance = getBalance(BankName,Name),
+      case NowCash >= Cash of
         true ->
-          {Pid ! {withdraw,Name,Cash,BankName},
-                io:format("success enter D&I",[]),
-                ets:delete(AtmName,cash),
-                ets:insert(AtmName,{cash,NowCash}};
+            Pid ! {withdraw,Name,Cash,BankName},
+            case Cash >= OldBalance of
+                true -> loop();
+                false ->
+                    ets:delete(AtmName,cash),
+                    ets:insert(AtmName,{cash,NowCash-Cash}),
+                    loop()
+            end;
         false ->
           io:format("sorry, insufficient cash in this atm\n",[]),
           loop()
